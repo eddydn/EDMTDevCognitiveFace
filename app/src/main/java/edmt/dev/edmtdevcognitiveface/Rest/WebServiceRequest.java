@@ -127,7 +127,7 @@ public class WebServiceRequest {
 
         String json;
         RequestBody requestBody;
-        if(isStream)
+        if(!isStream)
         {
             json = this.mGson.toJson(data);
             requestBody = RequestBody.create(mediaType, json);

@@ -47,7 +47,7 @@ public class WebServiceRequest {
             case DELETE:
                 return delete(url, data);
             case PUT:
-                return put(url, data);
+                return put(url, data,contentType);
             case OPTIONS:
                 break;
             case TRACE:
@@ -84,9 +84,31 @@ public class WebServiceRequest {
 
     private Object patch(String url, Map<String, Object> data, String contentType) throws ClientException, IOException {
 
-        MediaType  mediaType =  MediaType.parse("application/json; charset=utf-8");
-        String json = this.mGson.toJson(data);
-        RequestBody requestBody = RequestBody.create(mediaType, json);
+        MediaType  mediaType;
+        boolean isStream = false;
+        if (contentType != null && !(contentType.length() == 0)) {
+            mediaType = MediaType.parse(contentType);
+            if (contentType.toLowerCase(Locale.ENGLISH).contains(OCTET_STREAM)) {
+                isStream = true;
+            }
+        }
+        else
+            mediaType = MediaType.parse("application/json; charset=utf-8");
+
+        String json;
+        RequestBody requestBody;
+        if(!isStream)
+        {
+            json = this.mGson.toJson(data);
+            requestBody = RequestBody.create(mediaType, json);
+        }
+        else
+        {
+            requestBody = RequestBody.create(mediaType,(byte[]) data.get(DATA));
+        }
+
+
+
 
         Request request = new Request.Builder()
                 .addHeader(HEADER_KEY, mSubscriptionKey)
@@ -108,7 +130,7 @@ public class WebServiceRequest {
                 }
             }
 
-            throw new ClientException("Error executing Patch request!", statusCode);
+            throw new ClientException("Error executing POST request!", statusCode);
         }
     }
 
@@ -164,10 +186,32 @@ public class WebServiceRequest {
         }
     }
 
-    private Object put(String url, Map<String, Object> data) throws ClientException, IOException {
-        MediaType  mediaType =  MediaType.parse("application/json; charset=utf-8");
-        String json = this.mGson.toJson(data);
-        RequestBody requestBody = RequestBody.create(mediaType, json);
+    private Object put(String url, Map<String, Object> data,String contentType) throws ClientException, IOException {
+        MediaType  mediaType;
+        boolean isStream = false;
+        if (contentType != null && !(contentType.length() == 0)) {
+            mediaType = MediaType.parse(contentType);
+            if (contentType.toLowerCase(Locale.ENGLISH).contains(OCTET_STREAM)) {
+                isStream = true;
+            }
+        }
+        else
+            mediaType = MediaType.parse("application/json; charset=utf-8");
+
+        String json;
+        RequestBody requestBody;
+        if(!isStream)
+        {
+            json = this.mGson.toJson(data);
+            requestBody = RequestBody.create(mediaType, json);
+        }
+        else
+        {
+            requestBody = RequestBody.create(mediaType,(byte[]) data.get(DATA));
+        }
+
+
+
 
         Request request = new Request.Builder()
                 .addHeader(HEADER_KEY, mSubscriptionKey)
@@ -189,7 +233,7 @@ public class WebServiceRequest {
                 }
             }
 
-            throw new ClientException("Error executing PUT request!", statusCode);
+            throw new ClientException("Error executing POST request!", statusCode);
         }
     }
 
@@ -212,7 +256,6 @@ public class WebServiceRequest {
             Request request = new Request.Builder()
                     .url(url)
                     .addHeader(HEADER_KEY, this.mSubscriptionKey)
-                    .addHeader("Content-Type", "application/json")
                     .delete(requestBody)
                     .build();
 

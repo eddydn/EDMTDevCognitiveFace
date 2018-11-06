@@ -114,9 +114,31 @@ public class WebServiceRequest {
 
 
     private Object post(String url, Map<String, Object> data, String contentType) throws ClientException, IOException {
-        MediaType  mediaType =  MediaType.parse("application/json; charset=utf-8");
-        String json = this.mGson.toJson(data);
-        RequestBody requestBody = RequestBody.create(mediaType, json);
+        MediaType  mediaType;
+        boolean isStream = false;
+        if (contentType != null && !(contentType.length() == 0)) {
+            mediaType = MediaType.parse(contentType);
+            if (contentType.toLowerCase(Locale.ENGLISH).contains(OCTET_STREAM)) {
+                isStream = true;
+            }
+        }
+        else
+            mediaType = MediaType.parse("application/json; charset=utf-8");
+
+        String json;
+        RequestBody requestBody;
+        if(isStream)
+        {
+            json = this.mGson.toJson(data);
+            requestBody = RequestBody.create(mediaType, json);
+        }
+        else
+        {
+            requestBody = RequestBody.create(mediaType,(byte[]) data.get(DATA));
+        }
+
+
+
 
         Request request = new Request.Builder()
                 .addHeader(HEADER_KEY, mSubscriptionKey)
